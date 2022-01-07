@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-data = pd.read_csv("./data/btc2.csv",parse_dates=True, index_col="Date")
+data = pd.read_csv("./data/kospi.csv",parse_dates=True, index_col="Date")
 data = data.sort_index(ascending=True)
 # data = data[:]
 
