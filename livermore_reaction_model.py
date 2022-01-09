@@ -57,33 +57,63 @@ fee= 0.001 # 0.1% 수준 fee
 prepare_signal = 0
 reaction = 0 
 
-data.to_csv("data.csv")
+# data.to_csv("data.csv")
+prev_prev_peak = 0
+prev_prev_bottom = 0
 
-# for i in data.index:
-#     current_high = data[data.index==i]['High'].values[0]
-#     current_open = data[data.index==i]['Open'].values[0]
-#     current_low = data[data.index==i]['Low'].values[0]
-#     prev_peak = data[data.index==i]['peak'].values[0]
-#     prev_bottom = data[data.index==i]['bottom'].values[0]
+for i in data.index[1:]:
+    current_high = data[data.index==i]['High'].values[0]
+    current_open = data[data.index==i]['Open'].values[0]
+    current_low = data[data.index==i]['Low'].values[0]
+    prev_peak = data[data.index==i]['peak'].values[0]
+    prev_bottom = data[data.index==i]['bottom'].values[0]
 
-#     if state == 0:
-#         # 1) 다우 추세가 하락에서 상승으로 전환한다면 예비 신호
-#         if prepare_signal == 0:
-#             if current_high > prev_peak:
-#                 prepare_signal = 1 ## prepare to buy
-#             elif current_low < prev_bottom:
-#                 prepare_signal = -1 ## prepare to sell  
+    if state == 0:
+        # 1) 다우 추세가 하락에서 상승으로 전환한다면 예비 신호
+        if prepare_signal == 0:
+            if current_high > prev_peak:
+                prepare_signal = 1 ## prepare to buy
+            elif current_low < prev_bottom:
+                prepare_signal = -1 ## prepare to sell  
 
-#         # 2) 예비 신호가 떴는데 상승세 되돌림이 있다면 reaction += 1
-#         elif prepare_signal == 1:
+        # 2) 예비 신호가 떴는데 상승세 되돌림이 있다면 reaction += 1
+        elif prepare_signal == 1:
+            if prev_peak > prev_prev_peak:
+                reaction += 1
+            if reaction >= 2 and current_high > prev_peak:
+                state = 1
+                entry_price = prev_peak
+                entry_date = i
+                reaction = 0
+
+        elif prepare_signal == -1:
+            if prev_bottom < prev_prev_bottom:
+                reaction += 1
+            if reaction >=2 and current_low < prev_bottom:
+                state = -1
+                entry_price = prev_bottom
+                entry_date = i
+                reaction = 0
+    
+    elif state == 1:
+        if current_low < prev_bottom:
+            state = 0
+            exit_price = prev_bottom
+            exit_date = i
+                         
+
+    
+    prev_prev_peak = prev_peak
+    prev_prev_bottom = prev_bottom
+
             
 
 
-#         # 3) 만약 reaction >= 2 and prev_peak < current high 라면 buy signal
+        # 3) 만약 reaction >= 2 and prev_peak < current high 라면 buy signal
 
 
 
-#     elif state == 1:
-#         pass
-#     elif state == -1:
-#         pass
+    elif state == 1:
+        pass
+    elif state == -1:
+        pass
