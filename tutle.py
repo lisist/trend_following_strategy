@@ -17,7 +17,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
  
-data = pd.read_csv("./data/usdsek.csv",parse_dates=True, index_col="Date")
+data = pd.read_csv("./data/nasdaq.csv",parse_dates=True, index_col="Date")
 data = data.sort_index(ascending=True)
 
 status = 0  # buy or sell, neutral
