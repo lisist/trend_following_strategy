@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 data = pd.read_csv("kospi2.csv",parse_dates=True, index_col="Date")
 data = data.sort_index(ascending=True)
 data['120d_rolling'] = data['Close'].rolling(window=120).mean()
-data = data[120:]
+data = data[5000:]
 
 status = 0
 trading_list = []
@@ -41,32 +41,44 @@ for i, j  in zip(data.index[:-20],data.index[20:]):
         if current_low < _4w_min:
             exit_price = _4w_min
             exit_date = j
-            trading_list = trading_list + [entry_date,exit_date,exit_price/entry_price-1]
+            trading_list = trading_list + [[entry_date,exit_date,status,entry_price,exit_price,exit_price/entry_price-1]]
             
             status = 0
 
-
-    
+   
     elif status == -1:
         if current_high > _4w_max:
             exit_price = _4w_max
             exit_date = j
-            trading_list = trading_list + [entry_date,exit_date,-(exit_price/entry_price-1)]
+            trading_list = trading_list + [[entry_date,exit_date,status,entry_price,exit_price,-(exit_price/entry_price-1)]]
 
             status = 0
             
 
+strategy_result = pd.DataFrame(data['Close'],index=data.index)
+strategy_result['Buy_sell'] = np.repeat(0,len(strategy_result.index))
+prev_total_ret = 1
 
-print(trading_list)
+for start,end,state,entry_p,exit_p,pnl in trading_list:
+    for j in strategy_result[(strategy_result.index >= start) & (strategy_result.index <= end)].index:
+        strategy_result.at[j,'Buy_sell']=state
+        strategy_result.at[j,'entry_price']=entry_p
+        strategy_result.at[j,'exit_price']=exit_p
 
-total_ret = 1
-total_ret_list = []
-for i in range(0,int(len(trading_list)/3)):
-    ret = trading_list[3*i+2]
-    total_ret = total_ret * (1+ret)
-    total_ret_list = total_ret_list + [total_ret]
+        strategy_result.at[j,'pnl'] = prev_total_ret * (1+(strategy_result.at[j,'Close']/entry_p-1)*state)
+        if j == end:
+            prev_total_ret = prev_total_ret * (1+(exit_p/entry_p-1)*state)
+            strategy_result.at[j,'pnl'] = prev_total_ret
 
-print(total_ret)
+prev_pnl = 1
+for i in strategy_result.index:
+    if np.isnan(strategy_result.at[i,'pnl']):
+        strategy_result.at[i,'pnl'] = prev_pnl
+    else:
+        prev_pnl = strategy_result.at[i,'pnl']
 
-plt.plot(total_ret_list)
-plt.show()
+        
+
+strategy_result.to_csv("result.csv")
+
+
