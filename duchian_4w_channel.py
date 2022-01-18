@@ -5,14 +5,18 @@
 ## 매도 : 4주 저가 채널을 하향 돌파할 때 매도
 ## 최초 손절매 : 4주 고가 채널을 상향 돌파할 때 매수
 
+## 필터 : 매수할 때 현재가가 120일 이동평균보다 높아야함, 매도할 때는 반대
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-data = pd.read_csv("kospi2.csv",parse_dates=True, index_col="Date")
+moving_average = 120
+
+data = pd.read_csv("./data/btcusd.csv",parse_dates=True, index_col="Date")
 data = data.sort_index(ascending=True)
-data['120d_rolling'] = data['Close'].rolling(window=120).mean()
-data = data[5000:]
+data['d_rolling'] = data['Close'].rolling(window=moving_average).mean()
+data = data[:]
 
 status = 0
 trading_list = []
@@ -25,14 +29,14 @@ for i, j  in zip(data.index[:-20],data.index[20:]):
     current_low = data[data.index==j]['Low'].values[0]
     current_price = data[data.index==j]['Close'].values[0]
 
-    _120dma = data[data.index==j]['120d_rolling'].values[0]
+    _dma = data[data.index==j]['d_rolling'].values[0]
     
     if status == 0 :
-        if current_high > _4w_max  and current_price > _120dma:
+        if current_high > _4w_max  and current_price > _dma:
             status = 1
             entry_price = _4w_max
             entry_date = j
-        elif current_low < _4w_min and current_price < _120dma:
+        elif current_low < _4w_min and current_price < _dma:
             status = -1
             entry_price = _4w_min
             entry_date = j
